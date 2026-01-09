@@ -1,7 +1,7 @@
 // src/api/config.js
 // Complete API Configuration for PostgreSQL Backend
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://hotel-reservation-system-backend-6nf6.onrender.com/api';
 
 export const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('token');
