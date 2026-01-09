@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error fetching user:', error);
+      // Auto-logout if token is invalid
       localStorage.removeItem('token');
       setUser(null);
       setIsAuthenticated(false);
@@ -46,41 +47,93 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await hotelApi.login({ email, password });
+      console.log('Login response:', response); // Debug
+      
       if (response.success && response.token) {
+        // ✅ Store token
         localStorage.setItem('token', response.token);
+        console.log('Token stored:', response.token.substring(0, 20) + '...');
+        
+        // ✅ Set user data
         setUser(response.data);
         setIsAuthenticated(true);
-        return { success: true };
+        
+        return { 
+          success: true, 
+          message: 'Login successful',
+          data: response.data 
+        };
       } else {
-        return { success: false, message: response.message || 'Login failed' };
+        return { 
+          success: false, 
+          message: response.message || 'Login failed' 
+        };
       }
     } catch (error) {
-      return { success: false, message: error.message || 'Something went wrong' };
+      console.error('Login error:', error);
+      return { 
+        success: false, 
+        message: error.message || 'Something went wrong' 
+      };
     }
   };
 
   const register = async (name, email, password, phone) => {
     try {
+      console.log('Registering:', { name, email }); // Debug
+      
       const response = await hotelApi.register({ name, email, password, phone });
+      console.log('Register response:', response); // Debug
+      
       if (response.success) {
-        // REGISTRATION KELE KI AUTO-LOGIN NAHI KARAYCHA
-        // Just show success message
-        return { 
-          success: true, 
-          message: 'Registration successful! Please login with your credentials.' 
-        };
+        // ✅ FIX: Store token if provided (backend returns token on register)
+        if (response.token) {
+          localStorage.setItem('token', response.token);
+          console.log('Token stored from registration:', response.token.substring(0, 20) + '...');
+          
+          // ✅ Auto-login after registration
+          setUser(response.data);
+          setIsAuthenticated(true);
+          
+          return { 
+            success: true, 
+            message: 'Registration successful! You are now logged in.',
+            autoLogin: true,
+            data: response.data
+          };
+        } else {
+          // If no token, ask to login manually
+          return { 
+            success: true, 
+            message: 'Registration successful! Please login with your credentials.',
+            autoLogin: false
+          };
+        }
       } else {
-        return { success: false, message: response.message || 'Registration failed' };
+        return { 
+          success: false, 
+          message: response.message || 'Registration failed' 
+        };
       }
     } catch (error) {
-      return { success: false, message: error.message || 'Something went wrong' };
+      console.error('Register error:', error);
+      return { 
+        success: false, 
+        message: error.message || 'Something went wrong' 
+      };
     }
   };
 
   const logout = () => {
+    console.log('Logging out...');
     localStorage.removeItem('token');
     setUser(null);
     setIsAuthenticated(false);
+  };
+
+  const checkAuth = () => {
+    const token = localStorage.getItem('token');
+    return !!token;
   };
 
   const value = {
@@ -90,7 +143,8 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    fetchUser
+    fetchUser,
+    checkAuth
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
