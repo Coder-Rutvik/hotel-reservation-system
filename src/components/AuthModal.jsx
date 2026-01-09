@@ -11,6 +11,7 @@ const AuthModal = ({ onClose }) => {
     phone: ''
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(''); // Added for registration success
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuth();
 
@@ -20,11 +21,13 @@ const AuthModal = ({ onClose }) => {
       [e.target.name]: e.target.value
     });
     setError('');
+    setSuccess('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
 
     try {
@@ -41,7 +44,20 @@ const AuthModal = ({ onClose }) => {
       }
 
       if (result.success) {
-        onClose();
+        if (isLogin) {
+          // Login zale ki modal band kar
+          onClose();
+        } else {
+          // Registration successful - login page var switch kar
+          setSuccess(result.message || 'Registration successful! Please login.');
+          setFormData({
+            name: '',
+            email: '',
+            password: '',
+            phone: ''
+          });
+          setIsLogin(true); // Switch to login form
+        }
       } else {
         setError(result.message || 'Authentication failed');
       }
@@ -56,11 +72,12 @@ const AuthModal = ({ onClose }) => {
     <div className="auth-modal-overlay" onClick={onClose}>
       <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
         <button className="auth-modal-close" onClick={onClose}>×</button>
-        
+
         <h2>{isLogin ? 'Login' : 'Register'}</h2>
-        
+
         {error && <div className="auth-error">{error}</div>}
-        
+        {success && <div className="auth-success">{success}</div>}
+
         <form onSubmit={handleSubmit}>
           {!isLogin && (
             <div className="auth-form-group">
@@ -74,7 +91,7 @@ const AuthModal = ({ onClose }) => {
               />
             </div>
           )}
-          
+
           <div className="auth-form-group">
             <label>Email *</label>
             <input
@@ -85,7 +102,7 @@ const AuthModal = ({ onClose }) => {
               required
             />
           </div>
-          
+
           <div className="auth-form-group">
             <label>Password *</label>
             <input
@@ -97,7 +114,7 @@ const AuthModal = ({ onClose }) => {
               minLength="6"
             />
           </div>
-          
+
           {!isLogin && (
             <div className="auth-form-group">
               <label>Phone</label>
@@ -109,12 +126,12 @@ const AuthModal = ({ onClose }) => {
               />
             </div>
           )}
-          
+
           <button type="submit" className="auth-submit-btn" disabled={loading}>
             {loading ? 'Please wait...' : (isLogin ? 'Login' : 'Register')}
           </button>
         </form>
-        
+
         <div className="auth-switch">
           {isLogin ? (
             <p>Don't have an account? <button onClick={() => setIsLogin(false)}>Register</button></p>
@@ -128,4 +145,3 @@ const AuthModal = ({ onClose }) => {
 };
 
 export default AuthModal;
-

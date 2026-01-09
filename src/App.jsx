@@ -4,7 +4,7 @@ import Controls from './components/Controls';
 import AuthModal from './components/AuthModal';
 import { useAuth } from './context/AuthContext';
 import { hotelApi } from './api/config';
-import { initializeHotel, generateRandomOccupancy } from './utils/bookingAlgorithm';
+import { initializeHotel } from './utils/bookingAlgorithm';
 import './styles/App.css';
 
 function App() {
@@ -73,7 +73,7 @@ function App() {
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dayAfter = new Date(tomorrow);
     dayAfter.setDate(dayAfter.getDate() + 1);
-    
+
     if (!checkInDate) {
       setCheckInDate(tomorrow.toISOString().split('T')[0]);
     }
@@ -151,10 +151,10 @@ function App() {
         setBookedRooms(roomNumbers);
         setTravelTime(response.data.travelTime);
         setMessage(`✅ Successfully booked rooms: ${roomNumbers.join(', ')} (Travel: ${response.data.travelTime} mins, Price: ₹${response.data.totalPrice})`);
-        
+
         await fetchRooms();
         await fetchMyBookings();
-        
+
         setTimeout(() => {
           setBookedRooms([]);
         }, 3000);
@@ -166,17 +166,26 @@ function App() {
     }
   };
 
-  const handleRandom = () => {
+  const handleRandom = async () => {
     if (!isAuthenticated) {
       setShowAuthModal(true);
       return;
     }
-    const randomHotel = generateRandomOccupancy();
-    setHotel(randomHotel);
-    setBookedRooms([]);
-    setTravelTime(0);
-    const occupied = randomHotel.flatMap(f => f.rooms.filter(r => r.booked)).length;
-    setMessage(`🎲 Random occupancy generated: ${occupied} rooms occupied (Local visualization only)`);
+
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const response = await hotelApi.generateRandomOccupancy();
+      if (response.success) {
+        setMessage(`🎲 ${response.message}`);
+        await fetchRooms();
+      }
+    } catch (error) {
+      setMessage(`❌ ${error.message || 'Failed to generate random occupancy'}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = async () => {
@@ -184,14 +193,24 @@ function App() {
       setShowAuthModal(true);
       return;
     }
-    
-    const freshHotel = initializeHotel();
-    setHotel(freshHotel);
-    setBookedRooms([]);
-    setTravelTime(0);
-    setMessage('🔄 Local visualization reset (Backend data unchanged)');
-    
-    await fetchRooms();
+
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const response = await hotelApi.resetAllBookings();
+      if (response.success) {
+        setMessage(`🔄 ${response.message}`);
+        setBookedRooms([]);
+        setTravelTime(0);
+        await fetchRooms();
+        await fetchMyBookings();
+      }
+    } catch (error) {
+      setMessage(`❌ ${error.message || 'Failed to reset bookings'}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancelBooking = async (bookingId) => {
@@ -217,7 +236,7 @@ function App() {
         <div className="header-content">
           <div>
             <h1>🏨 Hotel Room Reservation System</h1>
-            <p className="subtitle">SDE 3 Assessment - Unstop (Backend Integrated)</p>
+            <p className="subtitle">SDE 3 Assessment - Unstop</p>
           </div>
           <div className="header-actions">
             {isAuthenticated ? (
@@ -231,7 +250,7 @@ function App() {
                 </button>
               </>
             ) : (
-              <button onClick={() => setShowAuthModal(true)} className="header-btn login-btn">
+              <button onClick={() => setShowAuthModal(true)} className="header-btn">
                 Login / Register
               </button>
             )}
@@ -269,7 +288,7 @@ function App() {
                       <p><strong>Status:</strong> <span className={`status-${booking.status}`}>{booking.status}</span></p>
                     </div>
                     {booking.status === 'confirmed' && (
-                      <button 
+                      <button
                         onClick={() => handleCancelBooking(booking.bookingId)}
                         className="cancel-btn"
                       >
@@ -311,7 +330,7 @@ function App() {
 
       <footer className="footer">
         <p>Unstop SDE 3 Assessment Submission | Hotel Room Reservation System</p>
-        <p className="footer-note">Frontend + Backend Integrated | MySQL + MongoDB</p>
+        <p className="footer-note">Frontend + Backend Integrated</p>
       </footer>
     </div>
   );

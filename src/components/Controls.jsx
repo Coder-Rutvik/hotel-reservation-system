@@ -67,11 +67,11 @@ const Controls = ({
             >
               {loading ? 'Booking...' : 'Book'}
             </button>
-            <button onClick={onReset} className="pdf-btn reset-btn" disabled={loading}>
-              Reset
-            </button>
             <button onClick={onRandom} className="pdf-btn random-btn" disabled={loading}>
               Random
+            </button>
+            <button onClick={onReset} className="pdf-btn reset-btn" disabled={loading}>
+              Reset
             </button>
           </div>
         </div>

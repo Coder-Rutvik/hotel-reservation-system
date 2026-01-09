@@ -25,18 +25,8 @@ const Room = ({ room, isSelected }) => {
     }
   };
 
-  const getRoomTitle = () => {
-    if (isCurrentlySelected) {
-      return `Room ${room.number} - Currently Selected`;
-    } else if (room.booked) {
-      return `Room ${room.number} - Booked`;
-    } else {
-      return `Room ${room.number} - Available`;
-    }
-  };
-
   return (
-    <div className={getRoomClass()} title={getRoomTitle()}>
+    <div className={getRoomClass()} title={`Room ${room.number} - ${isCurrentlySelected ? 'Selected' : room.booked ? 'Booked' : 'Available'}`}>
       {room.number}
       {isCurrentlySelected && (
         <div className="selected-badge">✓</div>

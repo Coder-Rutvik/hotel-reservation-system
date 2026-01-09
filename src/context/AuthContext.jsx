@@ -46,14 +46,16 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await hotelApi.login({ email, password });
-      if (response.success) {
+      if (response.success && response.token) {
         localStorage.setItem('token', response.token);
         setUser(response.data);
         setIsAuthenticated(true);
         return { success: true };
+      } else {
+        return { success: false, message: response.message || 'Login failed' };
       }
     } catch (error) {
-      return { success: false, message: error.message };
+      return { success: false, message: error.message || 'Something went wrong' };
     }
   };
 
@@ -61,13 +63,17 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await hotelApi.register({ name, email, password, phone });
       if (response.success) {
-        localStorage.setItem('token', response.token);
-        setUser(response.data);
-        setIsAuthenticated(true);
-        return { success: true };
+        // REGISTRATION KELE KI AUTO-LOGIN NAHI KARAYCHA
+        // Just show success message
+        return { 
+          success: true, 
+          message: 'Registration successful! Please login with your credentials.' 
+        };
+      } else {
+        return { success: false, message: response.message || 'Registration failed' };
       }
     } catch (error) {
-      return { success: false, message: error.message };
+      return { success: false, message: error.message || 'Something went wrong' };
     }
   };
 
@@ -89,4 +95,3 @@ export const AuthProvider = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-

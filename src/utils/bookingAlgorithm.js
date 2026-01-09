@@ -66,49 +66,6 @@ const findBestOnSingleFloor = (availableRooms, numRooms) => {
   return bestCombination;
 };
 
-const findBestAcrossFloors = (hotel, numRooms) => {
-  const allAvailableRooms = hotel.flatMap(floor => 
-    floor.rooms.filter(room => !room.booked)
-  );
-  
-  if (allAvailableRooms.length < numRooms) return null;
-  
-  const roomsByFloor = {}; 
-  allAvailableRooms.forEach(room => {
-    if (!roomsByFloor[room.floor]) roomsByFloor[room.floor] = [];
-    roomsByFloor[room.floor].push(room);
-  });
-  
-  
-  let bestCombination = null;
-  let bestTime = Infinity;
-  
-  const floors = Object.keys(roomsByFloor).map(Number);
-  
-  const generateCombinations = (start, current) => {
-    if (current.length === numRooms) {
-      const time = calculateTravelTime(current);
-      if (time < bestTime) {
-        bestTime = time;
-        bestCombination = [...current];
-      }
-      return;
-    }
-    
-    for (let i = start; i < floors.length; i++) {
-      const floorRooms = roomsByFloor[floors[i]];
-      for (let j = 0; j < floorRooms.length; j++) {
-        current.push(floorRooms[j]);
-        generateCombinations(i, current);
-        current.pop();
-      }
-    }
-  };
-  
-  generateCombinations(0, []);
-  return bestCombination;
-};
-
 export const calculateOptimalRooms = (hotel, numRooms) => {
   if (numRooms < 1 || numRooms > 5) {
     return { success: false, message: 'Can only book 1-5 rooms at a time' };
@@ -128,50 +85,10 @@ export const calculateOptimalRooms = (hotel, numRooms) => {
     }
   }
   
-  const combination = findBestAcrossFloors(hotel, numRooms);
-  if (combination) {
-    const floors = [...new Set(combination.map(r => r.floor))].sort((a, b) => a - b);
-    return {
-      success: true,
-      rooms: combination,
-      message: `Rooms across floors ${floors.join(', ')}`
-    };
-  }
-  
   return {
     success: false,
     message: `Not enough rooms available for booking ${numRooms} rooms`
   };
-};
-
-export const generateRandomOccupancy = () => {
-  const hotel = initializeHotel();
-  const totalRooms = 97;
-  const occupancyRate = 0.3;
-  
-  for (let i = 0; i < Math.floor(totalRooms * occupancyRate); i++) {
-    let roomFound = false;
-    while (!roomFound) {
-      const randomFloor = Math.floor(Math.random() * 10);
-      const floor = hotel[randomFloor];
-      const randomRoomIndex = Math.floor(Math.random() * floor.rooms.length);
-      
-      if (!floor.rooms[randomRoomIndex].booked) {
-        floor.rooms[randomRoomIndex].booked = true;
-        roomFound = true;
-      }
-    }
-  }
-  
-  return hotel;
-};
-
-export const getRoomByNumber = (hotel, roomNumber) => {
-  for (const floor of hotel) {
-    const room = floor.rooms.find(r => r.number === roomNumber);
-    if (room) return room;
-  }
-  return null;
 };
 
 export const verifyPDFExamples = () => {

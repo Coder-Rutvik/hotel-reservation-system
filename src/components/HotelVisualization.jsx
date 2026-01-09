@@ -1,4 +1,3 @@
- 
 import React from 'react';
 import Floor from './Floor';
 
@@ -6,7 +5,7 @@ const HotelVisualization = ({ hotel, bookedRooms }) => {
   return (
     <div className="hotel-visualization">
       <h2>🏨 Hotel Room Layout</h2>
-      <p className="visualization-subtitle">Click on rooms to see details. Stairs/Lift on left side.</p>
+      <p className="visualization-subtitle">Stairs/Lift on left side. Rooms arranged left to right.</p>
       
       <div className="floors-container">
         {hotel.map((floor, index) => (
