@@ -11,8 +11,20 @@ function App() {
   const { user, isAuthenticated, logout } = useAuth();
   const [hotel, setHotel] = useState([]);
   const [numRooms, setNumRooms] = useState(1);
-  const [checkInDate, setCheckInDate] = useState('');
-  const [checkOutDate, setCheckOutDate] = useState('');
+  
+  // ✅ FIX: Set initial dates to tomorrow and day after tomorrow
+  const [checkInDate, setCheckInDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  });
+  
+  const [checkOutDate, setCheckOutDate] = useState(() => {
+    const dayAfter = new Date();
+    dayAfter.setDate(dayAfter.getDate() + 2);
+    return dayAfter.toISOString().split('T')[0];
+  });
+  
   const [bookedRooms, setBookedRooms] = useState([]);
   const [travelTime, setTravelTime] = useState(0);
   const [message, setMessage] = useState('');
@@ -67,20 +79,21 @@ function App() {
     load();
   }, [isAuthenticated]);
 
-  useEffect(() => {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dayAfter = new Date(tomorrow);
-    dayAfter.setDate(dayAfter.getDate() + 1);
-
-    if (!checkInDate) {
-      setCheckInDate(tomorrow.toISOString().split('T')[0]);
-    }
-    if (!checkOutDate) {
-      setCheckOutDate(dayAfter.toISOString().split('T')[0]);
-    }
-  }, [checkInDate, checkOutDate]);
+  // ✅ FIX: Remove the problematic useEffect that was causing date issues
+  // useEffect(() => {
+  //   const today = new Date();
+  //   const tomorrow = new Date(today);
+  //   tomorrow.setDate(tomorrow.getDate() + 1);
+  //   const dayAfter = new Date(tomorrow);
+  //   dayAfter.setDate(dayAfter.getDate() + 1);
+  // 
+  //   if (!checkInDate) {
+  //     setCheckInDate(tomorrow.toISOString().split('T')[0]);
+  //   }
+  //   if (!checkOutDate) {
+  //     setCheckOutDate(dayAfter.toISOString().split('T')[0]);
+  //   }
+  // }, [checkInDate, checkOutDate]);
 
   const fetchRooms = async () => {
     try {
@@ -136,10 +149,28 @@ function App() {
       return;
     }
 
+    // ✅ FIX: ADD DATE VALIDATION
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const checkIn = new Date(checkInDate);
+    const checkOut = new Date(checkOutDate);
+    
+    if (checkIn < today) {
+      setMessage('❌ Check-in date cannot be in the past');
+      return;
+    }
+    
+    if (checkOut <= checkIn) {
+      setMessage('❌ Check-out date must be after check-in date');
+      return;
+    }
+
     setLoading(true);
     setMessage('');
 
     try {
+      console.log('📤 Booking request:', { numRooms, checkInDate, checkOutDate });
       const response = await hotelApi.bookRooms({
         numRooms,
         checkInDate,
@@ -158,9 +189,11 @@ function App() {
         setTimeout(() => {
           setBookedRooms([]);
         }, 3000);
+      } else {
+        setMessage(`❌ ${response.message || 'Booking failed'}`);
       }
     } catch (error) {
-      setMessage(`❌ ${error.message || 'Booking failed'}`);
+      setMessage(`❌ ${error.message || 'Booking failed. Please check dates.'}`);
     } finally {
       setLoading(false);
     }
@@ -230,6 +263,29 @@ function App() {
     }
   };
 
+  // ✅ FIX: Add emergency auto-fix button
+  const handleAutoFixRooms = async () => {
+    try {
+      setLoading(true);
+      setMessage('🔄 Auto-fixing rooms...');
+      
+      // Try GET request first
+      const response = await fetch('http://localhost:5000/api/auto-fix-rooms');
+      const data = await response.json();
+      
+      if (data.success) {
+        setMessage(`✅ ${data.message} - Total rooms: ${data.rooms?.total || 0}`);
+        await fetchRooms();
+      } else {
+        setMessage(`❌ ${data.message}`);
+      }
+    } catch (error) {
+      setMessage(`❌ Auto-fix failed: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="app">
       <header className="header">
@@ -247,6 +303,10 @@ function App() {
                 </button>
                 <button onClick={logout} className="header-btn logout-btn">
                   Logout
+                </button>
+                {/* ✅ ADD AUTO-FIX BUTTON */}
+                <button onClick={handleAutoFixRooms} className="header-btn fix-btn" title="Emergency fix for rooms">
+                  🔧 Fix Rooms
                 </button>
               </>
             ) : (
