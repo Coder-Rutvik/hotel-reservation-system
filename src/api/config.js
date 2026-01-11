@@ -6,19 +6,15 @@ console.log('📱 Frontend Environment:', process.env.NODE_ENV);
 console.log('🔗 API Base URL:', API_BASE_URL);
 
 export const apiRequest = async (endpoint, options = {}) => {
-  const token = localStorage.getItem('token');
-  
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,
   };
 
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
+  // Auth token logic removed
 
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   console.log(`🌐 API Call: ${options.method || 'GET'} ${url}`);
 
   try {
@@ -31,14 +27,14 @@ export const apiRequest = async (endpoint, options = {}) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`❌ API Error ${response.status}:`, errorText);
-      
+
       let errorData;
       try {
         errorData = JSON.parse(errorText);
       } catch {
         errorData = { message: errorText || `API request failed (${response.status})` };
       }
-      
+
       throw new Error(errorData.message || errorData.error);
     }
 
@@ -46,16 +42,16 @@ export const apiRequest = async (endpoint, options = {}) => {
     return data;
   } catch (error) {
     console.error('🔥 API Error Details:', error.message);
-    
+
     // User-friendly error messages
     if (error.message.includes('Failed to fetch')) {
       throw new Error('Cannot connect to server. Please check your internet connection.');
     }
-    
+
     if (error.message.includes('CORS')) {
       throw new Error('Connection blocked by security policy. Please try again later.');
     }
-    
+
     throw error;
   }
 };
@@ -65,11 +61,11 @@ export const testBackendConnection = async () => {
   try {
     console.log('Testing connection to:', API_BASE_URL);
     const response = await fetch(`${API_BASE_URL}/health`);
-    
+
     if (!response.ok) {
       throw new Error(`Server responded with ${response.status}`);
     }
-    
+
     const data = await response.json();
     return {
       success: true,
@@ -89,35 +85,15 @@ export const testBackendConnection = async () => {
 export const hotelApi = {
   // Test connection
   testConnection: testBackendConnection,
-  
+
   // Health Check
   checkHealth: () => apiRequest('/health'),
 
   // Test Database Connection
   testDatabase: () => apiRequest('/db-test'),
 
-  // Authentication Endpoints
-  register: (data) => apiRequest('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  }),
-
-  login: (data) => apiRequest('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  }),
-
-  getProfile: () => apiRequest('/auth/me'),
-
-  updateProfile: (data) => apiRequest('/auth/update-profile', {
-    method: 'PUT',
-    body: JSON.stringify(data)
-  }),
-
-  changePassword: (data) => apiRequest('/auth/change-password', {
-    method: 'PUT',
-    body: JSON.stringify(data)
-  }),
+  // Authentication Endpoints REMOVED
+  // register, login, getProfile, updateProfile, changePassword - ALL REMOVED
 
   // Room Endpoints
   getAllRooms: () => apiRequest('/rooms'),
@@ -134,7 +110,7 @@ export const hotelApi = {
     body: JSON.stringify(data)
   }),
 
-  getMyBookings: () => apiRequest('/bookings/my-bookings'),
+  getBookings: () => apiRequest('/bookings'), // Changed from getMyBookings
 
   getBookingById: (id) => apiRequest(`/bookings/${id}`),
 

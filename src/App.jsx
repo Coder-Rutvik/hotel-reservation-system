@@ -1,35 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import HotelVisualization from './components/HotelVisualization';
 import Controls from './components/Controls';
-import AuthModal from './components/AuthModal';
-import { useAuth } from './context/AuthContext';
+// import AuthModal from './components/AuthModal'; // REMOVED
+// import { useAuth } from './context/AuthContext'; // REMOVED
 import { hotelApi } from './api/config';
 import { initializeHotel } from './utils/bookingAlgorithm';
 import './styles/App.css';
 
 function App() {
-  const { user, isAuthenticated, logout } = useAuth();
+  // const { user, isAuthenticated, logout } = useAuth(); // REMOVED
   const [hotel, setHotel] = useState([]);
   const [numRooms, setNumRooms] = useState(1);
-  
+
   // ✅ FIX: Set initial dates to tomorrow and day after tomorrow
   const [checkInDate, setCheckInDate] = useState(() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     return tomorrow.toISOString().split('T')[0];
   });
-  
+
   const [checkOutDate, setCheckOutDate] = useState(() => {
     const dayAfter = new Date();
     dayAfter.setDate(dayAfter.getDate() + 2);
     return dayAfter.toISOString().split('T')[0];
   });
-  
+
   const [bookedRooms, setBookedRooms] = useState([]);
   const [travelTime, setTravelTime] = useState(0);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  // const [showAuthModal, setShowAuthModal] = useState(false); // REMOVED
   const [myBookings, setMyBookings] = useState([]);
   const [showBookings, setShowBookings] = useState(false);
   const [roomsLoading, setRoomsLoading] = useState(true);
@@ -41,10 +41,6 @@ function App() {
 
   useEffect(() => {
     const load = async () => {
-      if (!isAuthenticated) {
-        setRoomsLoading(false);
-        return;
-      }
       try {
         setRoomsLoading(true);
         const roomsResp = await hotelApi.getAllRooms();
@@ -65,7 +61,9 @@ function App() {
             return updatedHotel;
           });
         }
-        const bookingsResp = await hotelApi.getMyBookings();
+        // const bookingsResp = await hotelApi.getMyBookings(); // Changed to getAllBookings if needed or removed
+        // For simplicity, we can fetch all bookings or just skip it for now
+        const bookingsResp = await hotelApi.getBookings(); // Assuming we renamed/updated API
         if (bookingsResp.success) {
           setMyBookings(bookingsResp.data);
         }
@@ -77,7 +75,7 @@ function App() {
       }
     };
     load();
-  }, [isAuthenticated]);
+  }, []); // Run once on mount
 
   const fetchRooms = async () => {
     try {
@@ -108,7 +106,7 @@ function App() {
 
   const fetchMyBookings = async () => {
     try {
-      const response = await hotelApi.getMyBookings();
+      const response = await hotelApi.getBookings(); // was getMyBookings
       if (response.success) {
         setMyBookings(response.data);
       }
@@ -118,10 +116,7 @@ function App() {
   };
 
   const handleBook = async () => {
-    if (!isAuthenticated) {
-      setShowAuthModal(true);
-      return;
-    }
+    // Removed auth check
 
     if (numRooms < 1 || numRooms > 5) {
       setMessage('❌ Please enter a number between 1 and 5');
@@ -136,15 +131,15 @@ function App() {
     // ✅ FIX: ADD DATE VALIDATION
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const checkIn = new Date(checkInDate);
     const checkOut = new Date(checkOutDate);
-    
+
     if (checkIn < today) {
       setMessage('❌ Check-in date cannot be in the past');
       return;
     }
-    
+
     if (checkOut <= checkIn) {
       setMessage('❌ Check-out date must be after check-in date');
       return;
@@ -184,10 +179,7 @@ function App() {
   };
 
   const handleRandom = async () => {
-    if (!isAuthenticated) {
-      setShowAuthModal(true);
-      return;
-    }
+    // Removed auth check
 
     setLoading(true);
     setMessage('');
@@ -206,10 +198,7 @@ function App() {
   };
 
   const handleReset = async () => {
-    if (!isAuthenticated) {
-      setShowAuthModal(true);
-      return;
-    }
+    // Removed auth check
 
     setLoading(true);
     setMessage('');
@@ -256,39 +245,21 @@ function App() {
             <p className="subtitle">SDE 3 Assessment - Unstop</p>
           </div>
           <div className="header-actions">
-            {isAuthenticated ? (
-              <>
-                <span className="user-info">👤 {user?.name || user?.email}</span>
-                <button onClick={() => setShowBookings(!showBookings)} className="header-btn">
-                  📋 My Bookings
-                </button>
-                <button onClick={logout} className="header-btn logout-btn">
-                  Logout
-                </button>
-              </>
-            ) : (
-              <button onClick={() => setShowAuthModal(true)} className="header-btn">
-                Login / Register
-              </button>
-            )}
+            <button onClick={() => setShowBookings(!showBookings)} className="header-btn">
+              📋 All Bookings
+            </button>
           </div>
         </div>
       </header>
 
-      {showAuthModal && (
-        <AuthModal onClose={() => setShowAuthModal(false)} />
-      )}
+      {/* AuthModal Removed */}
 
       <div className="container">
-        {!isAuthenticated && (
-          <div className="auth-prompt">
-            <p>🔐 Please <button onClick={() => setShowAuthModal(true)} className="link-btn">login or register</button> to book rooms</p>
-          </div>
-        )}
+        {/* Auth Prompt Removed */}
 
-        {showBookings && isAuthenticated && (
+        {showBookings && (
           <div className="bookings-section">
-            <h2>📋 My Bookings</h2>
+            <h2>📋 All Bookings</h2>
             {myBookings.length === 0 ? (
               <p>No bookings yet. Book your first room!</p>
             ) : (
