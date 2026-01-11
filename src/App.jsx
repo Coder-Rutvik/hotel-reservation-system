@@ -242,7 +242,6 @@ function App() {
         <div className="header-content">
           <div>
             <h1>🏨 Hotel Room Reservation System</h1>
-            <p className="subtitle">SDE 3 Assessment - Unstop</p>
           </div>
           <div className="header-actions">
             <button onClick={() => setShowBookings(!showBookings)} className="header-btn">
@@ -317,7 +316,7 @@ function App() {
       </div>
 
       <footer className="footer">
-        <p>Unstop SDE 3 Assessment Submission | Hotel Room Reservation System</p>
+        <p>Hotel Room Reservation System</p>
         <p className="footer-note">Frontend + Backend Integrated</p>
       </footer>
     </div>
