@@ -71,19 +71,18 @@ const Controls = ({
         <div className="pdf-control-row">
           <div className="pdf-control-group">
             <label className="pdf-label">No of Rooms</label>
-            <input
-              type="number"
-              min="1"
-              max="5"
+            <select
               value={numRooms}
-              onChange={(e) => {
-                const value = parseInt(e.target.value) || 1;
-                setNumRooms(Math.max(1, Math.min(5, value)));
-              }}
+              onChange={(e) => setNumRooms(parseInt(e.target.value))}
               className="pdf-input"
               disabled={loading}
-            />
-            <small className="pdf-hint">(1-5 rooms)</small>
+              style={{ padding: '8px' }}
+            >
+              {[1, 2, 3, 4, 5].map(n => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+            <small className="pdf-hint">(Max 5 rooms)</small>
           </div>
           
           <div className="pdf-control-group">
