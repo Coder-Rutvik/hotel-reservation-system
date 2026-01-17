@@ -1,17 +1,18 @@
-// Dynamic API URL based on environment
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://hotel-reservation-system-backend-6nf6.onrender.com/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL ||
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:5000/api'
+    : 'https://hotel-reservation-system-backend-6nf6.onrender.com/api');
 
 // Debug: Log API URL
 console.log('📱 Frontend Environment:', process.env.NODE_ENV);
 console.log('🔗 API Base URL:', API_BASE_URL);
+console.log('🌍 Hostname:', window.location.hostname);
 
 export const apiRequest = async (endpoint, options = {}) => {
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,
   };
-
-  // Auth token logic removed
 
   const url = `${API_BASE_URL}${endpoint}`;
 
@@ -44,12 +45,12 @@ export const apiRequest = async (endpoint, options = {}) => {
     console.error('🔥 API Error Details:', error.message);
 
     // User-friendly error messages
-    if (error.message.includes('Failed to fetch')) {
-      throw new Error('Cannot connect to server. Please check your internet connection.');
+    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+      throw new Error(`Cannot connect to server at ${API_BASE_URL}. If you are developing locally, ensure your backend is running on port 5000.`);
     }
 
     if (error.message.includes('CORS')) {
-      throw new Error('Connection blocked by security policy. Please try again later.');
+      throw new Error('Connection blocked by security policy (CORS). Please ensure the backend allows this origin.');
     }
 
     throw error;
